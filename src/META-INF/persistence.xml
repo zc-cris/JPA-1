@@ -12,6 +12,10 @@
 		
 		<!-- 添加持久化类 -->
 		<class>com.zc.cris.helloworld.Customer</class>
+		<class>com.zc.cris.helloworld.Order</class>
+		<class>com.zc.cris.helloworld.Manager</class>
+		<class>com.zc.cris.helloworld.Department</class>
+		
 	
 		<properties>
 			<!-- 连接数据库的基本信息 -->
