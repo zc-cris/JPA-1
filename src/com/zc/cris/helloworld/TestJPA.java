@@ -11,6 +11,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 
+import org.hibernate.jpa.QueryHints;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,11 +39,230 @@ class TestJPA {
 		entityManagerFactory.close();
 	}
 
+	/*
+	 * 测试使用 jpql 语句进行数据的更新（删除同理）
+	 */
+	@Test
+	void testJPQLUpdate() {
+		String jpql = "update Customer c set c.name = :name where c.id = :id";
+		entityManager.createQuery(jpql).setParameter("name", "新垣结衣").setParameter("id", 2).executeUpdate();
+	}
+	
+	
+	
+	/*
+	 * 使用 jpql 的内置函数(将查询结果全部大写)
+	 */
+	@Test
+	void testJpqlFunction() {
+		String jqpl = "select upper(c.email) from Customer c";
+		List<String> list = entityManager.createQuery(jqpl).getResultList();
+		System.out.println(list);
+		
+	}
+	
+	
+	/*
+	 * 查询客户名字为 林允儿的orders（使用子查询）
+	 */
+	@Test
+	void testSubSelect() {
+		String jpql = "select o from Order o where o.customer = (select c from Customer c where c.name = :name)";
+		Query query = entityManager.createQuery(jpql).setParameter("name", "林允儿");
+		List<Order> resultList = query.getResultList();
+		System.out.println(resultList);
+	}
+	
+	
+	
+	
+	
+	
+	/*
+	 * jpql 的关联查询同 hql
+	 *	查询语句中的 fetch 不能省，否则返回的是 Object类型的数据（至于为什么，可以把去掉fetch 的sql语句放到数据库执行一下就懂了）
+	 */
+	@Test
+	void testLeftOuterJoinFetch() {
+		String jpql = "select c from Customer c left outer join fetch c.orders where c.id = :id";
+		Query query = entityManager.createQuery(jpql).setParameter("id", 2);
+		
+		// 返回的是 一个customer的实例，并且orders都已经初始化好了
+		Customer customer = (Customer) query.getSingleResult();
+		System.out.println(customer.getName());
+		System.out.println(customer.getOrders().size());
+		
+	}
+	
+	
+	
+	/*
+	 * 测试分组函数：查询哪些customer 的order 数量大于1的customer
+	 */
+	@Test
+	void testGroupBy() {
+		
+		String jpql = "select o.customer from Order o group by o.customer having count(o.id) >1";
+		Query query = entityManager.createQuery(jpql);
+		List resultList = query.getResultList();
+		System.out.println(resultList);
+		
+	}
+	
+	
+	/*
+	 * 测试排序函数
+	 */
+	@Test
+	void testOrderBy() {
+		
+		String jpql = "from Customer c where c.age > :age order by c.age desc";
+		// 显性启动查询缓存
+		Query query = entityManager.createQuery(jpql);
+		query.setParameter("age", 18);
+		List<Customer> resultList = query.getResultList();
+		System.out.println(resultList.size());
+	}
+	
+	
+	/*
+	 * 使用hibernate的查询缓存（两个配置）
+	 */
+	@Test
+	void testQueryCache() {
+		String jpql = "from Customer c where c.age > :age";
+		// 显性启动查询缓存
+		Query query = entityManager.createQuery(jpql).setHint(QueryHints.HINT_CACHEABLE, true);
+		query.setParameter("age", 18);
+		List<Customer> resultList = query.getResultList();
+		System.out.println(resultList.size());
+		
+		// 显性启动查询缓存
+		query = entityManager.createQuery(jpql).setHint(QueryHints.HINT_CACHEABLE, true);
+		query.setParameter("age", 18);
+		resultList = query.getResultList();
+		System.out.println(resultList.size());
+		
+	}
+	
+	
+	@Test
+	void testSecondLevelCache() {
+		Customer customer1 = entityManager.find(Customer.class, 2);
+		
+		transaction.commit();
+		entityManager.close();
+		
+		entityManager = entityManagerFactory.createEntityManager();
+		transaction = entityManager.getTransaction();
+		transaction.begin();
+		
+		
+		Customer customer2 = entityManager.find(Customer.class, 2);
+	}
+	
+	
+	
+	/*
+	 * 查询不维护关联关系的一方的时候，还是默认采用懒加载机制
+	 */
+	@Test
+	void testManyToManyFind2() {
+		Course course = entityManager.find(Course.class, 1);
+		System.out.println(course.getName());
+		
+		System.out.println(course.getStudents().size());
+	}
+	
+	
+	/*
+	 * 查询维护关联关系的一方的时候，默认采用懒加载机制
+	 */
+	@Test
+	void testManyToManyFind() {
+		Student student = entityManager.find(Student.class, 1);
+		System.out.println(student.getName());
+		
+		System.out.println(student.getCourses().size());
+		
+	}
+	
+	
 
+	/*
+	 * 多对多的保存
+	 */
+	@Test
+	void testManyToManyPersistence() {
+		Student student = new Student();
+		student.setName("cris");
+		
+		Student student2 = new Student();
+		student2.setName("詹姆斯");
+		
+		Course course = new Course();
+		course.setName("语文");
+		
+		Course course2 = new Course();
+		course2.setName("english");
+		
+		// 设置关联关系
+		student.getCourses().add(course);
+		student.getCourses().add(course2);
+		
+		student2.getCourses().add(course);
+		
+		course.getStudents().add(student);
+		course.getStudents().add(student2);
+		
+		course2.getStudents().add(student);
+		
+		// 执行保存操作
+		entityManager.persist(student);
+		entityManager.persist(student2);
+		entityManager.persist(course);
+		entityManager.persist(course2);
+		
+	}
 	
 	
 	
 	
+	
+	/*
+	 * 默认情况下
+	 * 1.若获取不维护关联关系的一方（没有外键），也会通过左外连接获取其关联的对象
+	 * 	依然可以通过 @OneToOne 的 fetch 属性来改变加载策略（强烈不建议），但是会额外发送sql语句初始化关联对象
+	 * 	说明在不维护关联关系的一方，不建议修改 fetch 属性，因为修改了也没有用，所以不修改就使用左外连接获取关联对象
+	 * 	如果修改为lazy，那么会额外发送一条update语句获取关联对象，所以相比查询两次，还是建议使用左外连接，即不做任何修改
+	 * 
+	 * 2. 为什么 JPA 要在查询没有外键一方的时候强行将另外一方查询出来？
+	 * 		- 对于有外键一方的数据表而言，我们可以通过外键得知对应的另外一端的情况（存在就返回对应的代理对象，不存在就返回null）
+	 * 		- 但是对于没有外键一方的数据表来说，它自己是不知道到底和哪张数据表是有关联关系的，如何返回 代理？如何返回null？所以 JPA 规范干脆
+	 * 		- 规定 查询没有外键的一方的时候直接将对应的另外一方查询出来，也许是左外连接，也许是额外发送一条select 语句，只要保证 一一对应的关系
+	 * 		- 能够体现出来就行
+	 * 
+	 */ 
+	@Test
+	void testOneToOneFind2() {
+		Manager mgr = entityManager.find(Manager.class, 1);
+		System.out.println(mgr.getName());
+		System.out.println(mgr.getDepartment().getClass().getName());
+		
+	}
+	
+	/*
+	 * 默认情况下
+	 * 1.若获取维护关联关系的一方（有外键），会通过左外连接获取其关联的对象
+	 * 	但是可以通过 @OneToOne 的 fetch 属性来改变加载策略，即修改为懒加载，返回就是一个代理对象
+	 */
+	@Test
+	public void testOneToOneFind() {
+		Department dept = entityManager.find(Department.class, 1);
+		System.out.println(dept.getName());
+		System.out.println(dept.getMgr().getClass().getName());
+		
+	}
 	
 	
 	

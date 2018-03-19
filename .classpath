@@ -14,5 +14,8 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/hibernate5.2.13-jpa"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/mysql_driver"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/5"/>
+	<classpathentry kind="lib" path="lib/ehcache-2.10.3.jar"/>
+	<classpathentry kind="lib" path="lib/hibernate-ehcache-5.2.13.Final.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-api-1.7.7.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

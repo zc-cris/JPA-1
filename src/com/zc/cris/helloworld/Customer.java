@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -19,7 +20,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-
+@Cacheable(true)
 @NamedQuery(name="testNamedQuery", query="select c from Customer c where c.age = :age")
 @Table(name = "JAP_CUSTOMERS")
 @Entity
@@ -120,7 +121,7 @@ public class Customer {
 	// 可以通过修改 @OneToMany 的cascade 属性来修改默认的删除策略(删除一之前将多的外键置为空)
 	// 注意：双向1-n的情况下，如果在1的一端 的 @OneToMany 中使用 mappedBy 属性，则 @OneToMany 端就一定不要再使用 @JoinColumn 注解了
 //	@JoinColumn(name="CUSTOMER_ID")
-	@OneToMany(fetch=FetchType.EAGER, cascade= {CascadeType.REMOVE}, mappedBy="customer")
+	@OneToMany(fetch=FetchType.LAZY, cascade= {CascadeType.REMOVE}, mappedBy="customer")
 	public Set<Order> getOrders() {
 		return orders;
 	}

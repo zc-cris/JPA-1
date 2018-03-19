@@ -54,4 +54,10 @@ public class Order {
 		this.customer = customer;
 	}
 
+	@Override
+	public String toString() {
+		return "Order [id=" + id + ", name=" + name + ", customer=" + customer + "]";
+	}
+	
+
 }

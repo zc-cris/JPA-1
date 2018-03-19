@@ -2,6 +2,7 @@
 <persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
 	<persistence-unit name="JPA-1" transaction-type="RESOURCE_LOCAL">
 	
+	
 		<!-- 
 			配置使用什么 ORM 产品来作为 JPA 的实现 
 			1. 实际上配置的是 javax.persistence.spi.PersistenceProvider 接口的实现类
@@ -10,12 +11,28 @@
 		-->
 		<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 		
+		
 		<!-- 添加持久化类 -->
 		<class>com.zc.cris.helloworld.Customer</class>
 		<class>com.zc.cris.helloworld.Order</class>
+		
 		<class>com.zc.cris.helloworld.Manager</class>
 		<class>com.zc.cris.helloworld.Department</class>
 		
+		<class>com.zc.cris.helloworld.Student</class>
+		<class>com.zc.cris.helloworld.Course</class>
+		
+		
+		<!-- 
+			配置 JPA 使用二级缓存的策略
+			ALL:所有的实体类都被缓存
+			NONE：所有的实体类都不被缓存
+			ENABLE_SELECTIVE：标识 @Cacheable（true）注解的实体类将被缓存（用的最多的就是这种）
+			DISABLE_SELECTIVE:缓存除标识 @Cacheable（false）以外的所有实体类
+			UNSPECIFIED:默认值，JPA 产品默认值将被使用
+		-->
+		<shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+	
 	
 		<properties>
 			<!-- 连接数据库的基本信息 -->
@@ -29,6 +46,11 @@
 			<property name="hibernate.show_sql" value="true"/>
 			<property name="hibernate.hbm2ddl.auto" value="update"/>
 				
+			<!-- 二级缓存相关配置 -->
+			<property name="cache.use_second_level_cache" value="true"/>
+			<property name="hibernate.cache.region.factory_class" value="org.hibernate.cache.ehcache.EhCacheRegionFactory"/>
+			<property name="hibernate.cache.use_query_cache" value="true"/>
+			
 			
 		</properties>
 	</persistence-unit>

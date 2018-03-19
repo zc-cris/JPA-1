@@ -2,6 +2,7 @@ package com.zc.cris.helloworld;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -41,7 +42,7 @@ public class Department {
 	// 使用 @OneToOne 来映射一对一关系
 	// 如果需要在当前表中添加外键（指向另外一方的主键），那么需要 @JoinColumn 来进行映射，注意，1-1，必须设置 unique=true （外键唯一性约束）
 	@JoinColumn(name="MANAGER_ID", unique=true)
-	@OneToOne
+	@OneToOne(fetch=FetchType.LAZY)
 	public Manager getMgr() {
 		return mgr;
 	}
